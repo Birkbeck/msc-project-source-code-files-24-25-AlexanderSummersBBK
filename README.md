@@ -13,4 +13,4 @@ Implement SHAP into the model.
 Rigourously test the best neigbourhood of SHAP values in each feature.
 
 # Phase 4
-Ceate plots that predict the next 3 years of cyber attacks.
+Create plots that predict the next 3 years of cyber attacks.
