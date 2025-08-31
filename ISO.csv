@@ -24,13 +24,12 @@ Belize,BZ
 Benin,BJ
 Bermuda,BM
 Bhutan,BT
-Bolivia (Plurinational State of),BO
+Bolivia,BO
 "Bonaire, Sint Eustatius and Saba",BQ
 Bosnia and Herzegovina,BA
 Botswana,BW
 Bouvet Island,BV
 Brazil,BR
-British Indian Ocean Territory ,IO
 Brunei Darussalam,BN
 Bulgaria,BG
 Burkina Faso,BF
@@ -56,8 +55,8 @@ Croatia,HR
 Cuba,CU
 Curaçao,CW
 Cyprus,CY
-Czechia,CZ
-Côte d'Ivoire,CI
+Czech Republic,CZ
+Ivory Coast,CI
 Denmark,DK
 Djibouti,DJ
 Dominica,DM
@@ -70,7 +69,7 @@ Eritrea,ER
 Estonia,EE
 Eswatini,SZ
 Ethiopia,ET
-Falkland Islands  [Malvinas],FK
+Falkland Islands,FK
 Faroe Islands ,FO
 Fiji,FJ
 Finland,FI
@@ -82,7 +81,7 @@ Gabon,GA
 Gambia ,GM
 Georgia,GE
 Germany,DE
-Ghana,GH
+Ghana ,GH
 Gibraltar,GI
 Greece,GR
 Greenland,GL
@@ -103,7 +102,7 @@ Hungary,HU
 Iceland,IS
 India,IN
 Indonesia,ID
-Iran (Islamic Republic of),IR
+Iran,IR
 Iraq,IQ
 Ireland,IE
 Isle of Man,IM
@@ -116,11 +115,11 @@ Jordan,JO
 Kazakhstan,KZ
 Kenya,KE
 Kiribati,KI
-Korea (the Democratic People's Republic of),KP
-Korea (the Republic of),KR
+North Korea,KP
+South Korea,KR
 Kuwait,KW
 Kyrgyzstan,KG
-Lao People's Democratic Republic ,LA
+Laos,LA
 Latvia,LV
 Lebanon,LB
 Lesotho,LS
@@ -142,8 +141,8 @@ Mauritania,MR
 Mauritius,MU
 Mayotte,YT
 Mexico,MX
-Micronesia (Federated States of),FM
-Moldova (the Republic of),MD
+Micronesia,FM
+Moldova,MD
 Monaco,MC
 Mongolia,MN
 Montenegro,ME
@@ -167,7 +166,7 @@ Norway,NO
 Oman,OM
 Pakistan,PK
 Palau,PW
-"Palestine, State of",PS
+Palestine,PS
 Panama,PA
 Papua New Guinea,PG
 Paraguay,PY
@@ -205,7 +204,6 @@ Slovenia,SI
 Solomon Islands,SB
 Somalia,SO
 South Africa,ZA
-South Georgia and the South Sandwich Islands,GS
 South Sudan,SS
 Spain,ES
 Sri Lanka,LK
@@ -214,10 +212,10 @@ Suriname,SR
 Svalbard and Jan Mayen,SJ
 Sweden,SE
 Switzerland,CH
-Syrian Arab Republic,SY
-Taiwan (Province of China),TW
+Syria ,SY
+Taiwan ,TW
 Tajikistan,TJ
-"Tanzania, United Republic of",TZ
+Tanzania,TZ
 Thailand,TH
 Timor-Leste,TL
 Togo,TG
@@ -232,14 +230,13 @@ Tuvalu,TV
 Uganda,UG
 Ukraine,UA
 United Arab Emirates ,AE
-United Kingdom of Great Britain and Northern Ireland ,GB
-United States Minor Outlying Islands ,UM
+United Kingdom,GB
 United States of America ,US
 Uruguay,UY
 Uzbekistan,UZ
 Vanuatu,VU
-Venezuela (Bolivarian Republic of),VE
-Viet Nam,VN
+Venezuela,VE
+Vietnam,VN
 Virgin Islands (British),VG
 Virgin Islands (U.S.),VI
 Wallis and Futuna,WF

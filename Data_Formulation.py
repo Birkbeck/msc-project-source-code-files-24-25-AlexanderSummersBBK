@@ -12,4 +12,11 @@ paths_ds = {}
 for each in paths:
     paths_ds[each] = pd.DataFrame(pd.read_csv(paths[each]))
 
+countries = []
+for each in paths_ds["path_wcci"]["Country"]:
+    country = paths_ds["path_ISO"][paths_ds["path_ISO"]["Country"].str.contains(each)]["Alpha 2"].tolist()
+    countries.append(country[0])
 
+paths_ds["path_wcci"]["Alpha 2"] = countries
+
+print(paths_ds["path_wcci"])
