@@ -19,4 +19,11 @@ for each in paths_ds["path_wcci"]["Country"]:
 
 paths_ds["path_wcci"]["Alpha 2"] = countries
 
-print(paths_ds["path_wcci"])
+
+hack_dates = pd.merge(paths_ds["path_hackmageddon"], paths_ds["path_dates"], on = "Date", how = "outer")
+hack_dates_main = hack_dates.dropna(subset = ["ID"])
+print(hack_dates_main)
+
+
+'''a=paths_ds["path_hackmageddon"][paths_ds["path_hackmageddon"]["ID"]==364]["Country"].tolist()[0]
+print(a.replace("\n", " "))'''
