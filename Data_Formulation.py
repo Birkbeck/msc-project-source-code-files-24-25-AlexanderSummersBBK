@@ -19,10 +19,15 @@ for each in paths_ds["path_wcci"]["Country"]:
 
 paths_ds["path_wcci"]["Alpha 2"] = countries
 
-hack_dates = pd.merge(paths_ds["path_hackmageddon"], paths_ds["path_dates"], on = "Date", how = "outer")
-hack_dates_main = hack_dates.dropna(subset = ["ID"])
+hack_dates = pd.merge(paths_ds["path_hackmageddon"], paths_ds["path_dates"], on = "Date", how = "left")
 
 
+main_table = pd.merge(hack_dates, paths_ds["path_wcci"], left_on = "Country", right_on = "Alpha 2", how = "left")
+main_table = main_table.drop(columns = "Alpha 2")
+main_table = main_table.rename(columns={'Country_x': 'Alpha 2', 'Country_y': 'Country'})
+main_table = main_table.dropna(subset = ["WCI Score"])
+print(main_table)
 
 '''a=paths_ds["path_hackmageddon"][paths_ds["path_hackmageddon"]["ID"]==364]["Country"].tolist()[0]
-print(a.replace("\n", " "))'''
+print(a.replace("\n", " "))
+'''
