@@ -30,8 +30,6 @@ main_table = main_table.dropna(subset = ["WCI Score"])
 attack_class = {"Cyber Espionage": "CE", "Cyber Crime": "CC", "Hacktivism": "H", "Cyber Warfare": "CW"}
 main_table["Attack Class"] = main_table["Attack Class"].replace(attack_class)
 
-print(main_table)
+main_table.to_csv(path / "main_table.csv", index = False)
 
-'''a=paths_ds["path_hackmageddon"][paths_ds["path_hackmageddon"]["ID"]==364]["Country"].tolist()[0]
-print(a.replace("\n", " "))
-'''
+print("Complete")
