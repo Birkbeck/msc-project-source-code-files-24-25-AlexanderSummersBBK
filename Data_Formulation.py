@@ -26,6 +26,10 @@ main_table = pd.merge(hack_dates, paths_ds["path_wcci"], left_on = "Country", ri
 main_table = main_table.drop(columns = "Alpha 2")
 main_table = main_table.rename(columns={'Country_x': 'Alpha 2', 'Country_y': 'Country'})
 main_table = main_table.dropna(subset = ["WCI Score"])
+
+attack_class = {"Cyber Espionage": "CE", "Cyber Crime": "CC", "Hacktivism": "H", "Cyber Warfare": "CW"}
+main_table["Attack Class"] = main_table["Attack Class"].replace(attack_class)
+
 print(main_table)
 
 '''a=paths_ds["path_hackmageddon"][paths_ds["path_hackmageddon"]["ID"]==364]["Country"].tolist()[0]
