@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from sklearn.metrics import mean_squared_eror
+from sklearn.metrics import mean_absolute_error
 from datetime import datetime, timedelta
 import numpy as np
 import xgboost as xgb
@@ -54,8 +54,23 @@ def continuous_backtest(X, y, training_n = 8400, testing_n = 20, max_folds = 150
         X_test = X.iloc[test_initial : test_final]
         y_train = y.iloc[: train_final]
         y_test = y.iloc[test_initial : test_final]
-        D_train = xgb.Dmatrix(X_train, label = y_train, enable_categorical = True)
-        D_test = xgb.Dmatrix(X_test, label = y_test, enable_categorical = True)
+        D_train = xgb.DMatrix(X_train, label = y_train, enable_categorical = True)
+        D_test = xgb.DMatrix(X_test, label = y_test, enable_categorical = True)
+        parameters = {'objective': 'reg:absoluteerror',
+                      'enable_categorical': True,
+                      'tree_method': 'hist',
+                      'max_depth': 5,
+                      'learning_rate': 0.05,
+                      'eval_metric': 'mae'}
+        model = xgb.train(parameters, D_train, num_boost_round = 200)
+        predictions = model.predict(D_test)
+        mae = mean_absolute_error(y_test, predictions)
+        values.append({'mae': mae,
+                       'Predictions': predictions,
+                       'y_test': y_test.values,
+                       'dates': y_test.index})
+        train_final += testing_n
+        fold_n += 1
     return values
 
 
@@ -63,4 +78,4 @@ X = data.drop(columns = ["ID"])
 y = pd.DataFrame(n_of_attacks)
 
 values = continuous_backtest(X, y)
-print(values[0])
+print(values)
