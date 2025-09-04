@@ -1,9 +1,9 @@
 import pandas as pd
 from pathlib import Path
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import TimeSeriesSplit
 from datetime import datetime, timedelta
 import numpy as np
-
+import xgboost as xgb
 
 # Defines the path to the data
 path = Path.cwd()
@@ -12,7 +12,7 @@ data = pd.DataFrame(pd.read_csv(path / "main_table.csv"))
 # Creates a library of dates with associated IDs, that are stored in an array
 dates = data["Date"]
 dates_id = {}
-for i in range(len(dates)-1):
+for i in range(len(dates)):
     if dates[i] not in dates_id:
         dates_id[dates[i]] = data[data["Date"] == dates[i]]["ID"].tolist()
 
@@ -35,11 +35,26 @@ for each in calendar:
 # Adding a number of attacks to each date
 n_of_attacks = []
 for each in calendar:
-    n_of_attacks.append(len(calendar[each]))
+    if len(calendar[each])>0:
+        for i in range(len(calendar[each])):
+            n_of_attacks.append(len(calendar[each]))
+    else:
+        n_of_attacks.append(len(calendar[each]))
 
-# Using back testing
-
-
-
-
-
+# Using back testing and xgboost
+def backtest(X, y, model, splits = 3):
+    ts = TimeSeriesSplit(n_splits = splits)
+    values = []
+    for train, test in ts.split(X):
+        X_train, X_test = X.iloc[train], X.iloc[test]
+        y_train , y_test = y.iloc[train], y.iloc[test]
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        values.append([y_test, predictions])
+    return values
+X = data.drop(columns=["ID"])
+y = pd.DataFrame(n_of_attacks)
+print(y)
+model = xgb.XGBRegressor()
+values = backtest(X, y, model)
+print(values[0])
