@@ -26,7 +26,7 @@ while start <= end:
 # Combines dates_id and calendar by cycling through the dates in calendar.
 # Once a date in calendar has a coressponding array of IDs, each of the IDs 
 # will be implemented into the arrays within the calendar.
-data_without_dates = data.drop(columns=["ID", "Date"])
+data_without_dates = data.drop(columns=["Date"])
 for each in calendar:
     if each in dates_id:
         for thy in dates_id[each]:
@@ -35,11 +35,7 @@ for each in calendar:
 # Adding a number of attacks to each date
 n_of_attacks = []
 for each in calendar:
-    if len(calendar[each])>0:
-        for i in range(len(calendar[each])):
-            n_of_attacks.append(len(calendar[each]))
-    else:
-        n_of_attacks.append(len(calendar[each]))
+    n_of_attacks.append(len(calendar[each]))
 
 # Using back testing and xgboost
 def backtest(X, y, model, splits = 3):
@@ -52,7 +48,8 @@ def backtest(X, y, model, splits = 3):
         predictions = model.predict(X_test)
         values.append([y_test, predictions])
     return values
-X = data.drop(columns=["ID"])
+print(len(calendar), len(n_of_attacks))
+X = calendar
 y = pd.DataFrame(n_of_attacks)
 print(y)
 model = xgb.XGBRegressor()
