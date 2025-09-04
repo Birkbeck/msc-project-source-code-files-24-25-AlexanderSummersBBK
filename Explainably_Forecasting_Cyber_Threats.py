@@ -4,6 +4,7 @@ from sklearn.metrics import mean_absolute_error
 from datetime import datetime, timedelta
 import numpy as np
 import xgboost as xgb
+import shap
 
 # Defines the path to the data
 path = Path.cwd()
@@ -73,10 +74,30 @@ def continuous_backtest(X, y, training_n = 8400, testing_n = 20, max_folds = 150
         train_final += testing_n
         fold_n += 1
     return values
-
-
 X = data.drop(columns = ["ID"])
 y = pd.DataFrame(n_of_attacks)
-
 values = continuous_backtest(X, y)
-print(values)
+
+# SHAP implementation
+forecast_dates = pd.data_range(start = "28/02/2025" + timedelta(days = 1), period = 365*3)
+forecast = pd.DataFrame(index = forecast_dates)
+X_forecast = forecast[X.columns]
+for each in X_forecast.select_dtypes(include = 'object').columns:
+    X_forecast[each] = X_forecast[each].astype('category')
+
+for each in X.select_dtypes(include = 'object').columns:
+    X[each] = X[each].astype('category')
+D_train_main = xgb.DMatrix(X, label = y, enable_categorical = True)
+parameters = {'objective': 'reg:absoluteerror',
+              'enable_categorical': True,
+                'tree_method': 'hist',
+                'max_depth': 5,
+                'learning_rate': 0.05,
+                'eval_metric': 'mae'}
+model_main = xgb.train(parameters,D_train_main, num_boost_round = 200)
+explainer = shap.TreeExplainer(model_main)
+shap_values = explainer.shap_values()
+# Ranking System
+
+# Final Projection
+
