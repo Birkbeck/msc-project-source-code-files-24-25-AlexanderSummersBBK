@@ -44,6 +44,8 @@ for each in calendar:
 # Using back testing and xgboost
 def continuous_backtest(X, y, training_n = 8400, testing_n = 20, max_folds = 150):
     values = []
+    for each in X.select_dtypes(include = 'object').columns:
+        X[each] = X[each].astype('category')
     length_of_data = len(data)
     fold_n = 0
     train_final = training_n
@@ -62,13 +64,12 @@ def continuous_backtest(X, y, training_n = 8400, testing_n = 20, max_folds = 150
                       'max_depth': 5,
                       'learning_rate': 0.05,
                       'eval_metric': 'mae'}
-        model = xgb.train(parameters, D_train, num_boost_round = 200)
+        model = xgb.train(parameters, D_train, num_boost_round = 200, early_stopping_rounds = 25)
         predictions = model.predict(D_test)
         mae = mean_absolute_error(y_test, predictions)
         values.append({'mae': mae,
                        'Predictions': predictions,
-                       'y_test': y_test.values,
-                       'dates': y_test.index})
+                       'y_test': y_test.values})
         train_final += testing_n
         fold_n += 1
     return values
