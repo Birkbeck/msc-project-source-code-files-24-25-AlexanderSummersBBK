@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from sklearn.model_selection import TimeSeriesSplit
+from sklearn.metrics import mean_squared_eror
 from datetime import datetime, timedelta
 import numpy as np
 import xgboost as xgb
@@ -35,23 +35,32 @@ for each in calendar:
 # Adding a number of attacks to each date
 n_of_attacks = []
 for each in calendar:
-    n_of_attacks.append(len(calendar[each]))
+    if len(calendar[each]) > 0:
+        for i in range(len(calendar[each])):
+            n_of_attacks.append(len(calendar[each]))
+    else:
+        n_of_attacks.append(len(calendar[each]))
 
 # Using back testing and xgboost
-def backtest(X, y, model, splits = 3):
-    ts = TimeSeriesSplit(n_splits = splits)
+def continuous_backtest(X, y, training_n = 8400, testing_n = 20, max_folds = 150):
     values = []
-    for train, test in ts.split(X):
-        X_train, X_test = X.iloc[train], X.iloc[test]
-        y_train , y_test = y.iloc[train], y.iloc[test]
-        model.fit(X_train, y_train)
-        predictions = model.predict(X_test)
-        values.append([y_test, predictions])
+    length_of_data = len(data)
+    fold_n = 0
+    train_final = training_n
+    while (train_final + testing_n) <= length_of_data and fold_n < max_folds:
+        test_initial = train_final
+        test_final = test_initial + testing_n
+        X_train = X.iloc[: train_final]
+        X_test = X.iloc[test_initial : test_final]
+        y_train = y.iloc[: train_final]
+        y_test = y.iloc[test_initial : test_final]
+        D_train = xgb.Dmatrix(X_train, label = y_train, enable_categorical = True)
+        D_test = xgb.Dmatrix(X_test, label = y_test, enable_categorical = True)
     return values
-print(len(calendar), len(n_of_attacks))
-X = calendar
+
+
+X = data.drop(columns = ["ID"])
 y = pd.DataFrame(n_of_attacks)
-print(y)
-model = xgb.XGBRegressor()
-values = backtest(X, y, model)
+
+values = continuous_backtest(X, y)
 print(values[0])
