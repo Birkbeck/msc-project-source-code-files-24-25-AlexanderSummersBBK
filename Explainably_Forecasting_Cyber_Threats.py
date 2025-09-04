@@ -20,7 +20,7 @@ for i in range(len(dates)-1):
 start, end = datetime.strptime("01/01/2016", "%d/%m/%Y"), datetime.strptime("28/02/2025", "%d/%m/%Y")
 calendar = {}
 while start <= end:
-    calendar[start.strftime("%d/%m/%Y")] = [[]]
+    calendar[start.strftime("%d/%m/%Y")] = []
     start += timedelta(days=1)
 
 # Combines dates_id and calendar by cycling through the dates in calendar.
@@ -30,12 +30,16 @@ data_without_dates = data.drop(columns=["ID", "Date"])
 for each in calendar:
     if each in dates_id:
         for thy in dates_id[each]:
-            calendar[each][0].append(data_without_dates[data["ID"] == thy])
+            calendar[each].append(data_without_dates[data["ID"] == thy])
 
 # Adding a number of attacks to each date
+n_of_attacks = []
 for each in calendar:
-    calendar[each].append(len(calendar[each][0]))
+    n_of_attacks.append(len(calendar[each]))
+
+# Using back testing
 
 
-print(calendar["01/01/2016"])
+
+
 
