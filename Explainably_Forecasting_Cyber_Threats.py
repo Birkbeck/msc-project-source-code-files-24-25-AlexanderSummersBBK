@@ -81,7 +81,7 @@ def model(a, b):
     return modelling
 main_model = model(data, n_of_attacks)
 
-# Predicting next 3 Years of SHAP Values Globally
+# Predicting next 3 Years of Cyber Attacks
 n_days = 365*3
 X_for = data.drop(columns = ["ID"]).sample(n = n_days, replace = True).reset_index(drop = True)
 days = pd.date_range(start = datetime.strptime("01/03/2025", "%d/%m/%Y"), periods = n_days, freq = "D")
@@ -94,7 +94,7 @@ for each in features_for:
 # Cycle through each model, then access on real data between 01-01-2025 and 28-02-2025 to choose best model to then make forecast with.
 forecast = main_model[-1].predict(X_for)
 
-
+# Create the associated SHAP value graph.
 
 # Final Projection
 def plot(dates = days, optimal = forecast):
