@@ -57,9 +57,6 @@ def model(a, b):
     modelling, predictions, maes, shap_values, Xs = [], [], [], [], []
     for initial in range(len(a) - int(len(a)*0.7) - int(len(a)*0.2) + 1):
         i, j = list(range(initial, initial + int(len(a)*0.7))), list(range(initial + int(len(a)*0.7), initial + int(len(a)*0.7) + int(len(a)*0.2)))
-        print(i)
-        print("**********")
-        print(j)
         X_train = X.iloc[i]
         X_test = X.iloc[j]
         y_train = y.iloc[i]
@@ -77,19 +74,32 @@ def model(a, b):
         Xs.append(X_test)
 
 
-    main_shap = np.vstack(shap_values)
+    '''main_shap = np.vstack(shap_values)
     main_X = pd.concat(Xs, axis = 0)
     shap.summary_plot(main_shap, features = main_X, plot_type = "dot", max_display = 10)
-    plt.show()
-    return [modelling, predictions, maes, shap_values, Xs]
+    plt.show()'''
+    return modelling
 main_model = model(data, n_of_attacks)
+
 # Predicting next 3 Years of SHAP Values Globally
+n_days = 365*3
+X_for = data.drop(columns = ["ID"]).sample(n = n_days, replace = True).reset_index(drop = True)
+days = pd.date_range(start = datetime.strptime("01/03/2025", "%d/%m/%Y"), periods = n_days, freq = "D")
+X_for.index = days
+features_for = [column for column in X_for.columns]
+for each in features_for:
+    X_for[each] = X_for[each].astype('category')
+
+
+# Cycle through each model, then access on real data between 01-01-2025 and 28-02-2025 to choose best model to then make forecast with.
+forecast = main_model[-1].predict(X_for)
 
 
 
 # Final Projection
-'''def plot(dates = forecast_dates, optimal = optimal_forecast):
-    plt.plot(forecast_dates, optimal_forecast)
+def plot(dates = days, optimal = forecast):
+    plt.plot(dates, optimal)
     plt.xlabel("Date")
     plt.ylabel("Predicted Number of Attacks Overall")
-    plt.show()'''
+    plt.show()
+plot()
