@@ -46,14 +46,14 @@ for each in calendar:
     else:
         n_of_attacks.append(len(calendar[each]))
 
-# Using back testing and xgboost
+# Using back testing and lightGBM with SHAP
 X = data.drop(columns = ["ID"])
 features = [column for column in X.columns]
 for each in features:
     X[each] = X[each].astype('category')
 y = pd.DataFrame(n_of_attacks)
 tss = TimeSeriesSplit(n_splits=4)
-modelling, maes = [], []
+modelling, predictions, maes, shap_values, Xs = [], [], [], [], []
 for initial in range(len(data) - int(len(data)*0.7) - int(len(data)*0.2) + 1):
     i, j = list(range(initial, initial + int(len(data)*0.7))), list(range(initial + int(len(data)*0.7), initial + int(len(data)*0.7) + int(len(data)*0.2)))
     X_train = X.iloc[i]
@@ -64,13 +64,20 @@ for initial in range(len(data) - int(len(data)*0.7) - int(len(data)*0.2) + 1):
     model = LGBMRegressor(objective = 'regression', n_estimators = 1000)
     model.fit(X_train, y_train, eval_set = [(X_test, y_test)], callbacks = [early_stopping(25), log_evaluation(10)])
     y_prediction = model.predict(X_test)
-    modelling.append(y_prediction)
+    predictions.append(y_prediction)
     mae = mean_absolute_error(y_test, y_prediction)
     maes.append(mae)
-print(modelling)
-print("**************************")
-print(maes)
-# SHAP implementation
+    modelling.append(model)
+    explainer = shap.TreeExplainer(model)
+    shap_values.append(explainer.shap_values(X_test))
+    Xs.append(X_test)
+
+
+main_shap = np.vstack(shap_values)
+main_X = pd.concat(Xs, axis = 0)
+shap.summary_plot(main_shap, features = main_X, plot_type = "dot", max_display = 10)
+plt.show()
+
 '''forecast_dates = pd.date_range(start = end + timedelta(days = 1), periods = 365*3)
 forecast = pd.DataFrame(index = forecast_dates, columns = X.columns)
 X_forecast = forecast[X.columns]
@@ -83,8 +90,7 @@ parameters = {'objective': 'reg:absoluteerror',
                 'max_depth': 5,
                 'learning_rate': 0.05,
                 'eval_metric': 'mae'}
-model_main = xgb.train(parameters, D_train_main, num_boost_round = 200)
-explainer = shap.TreeExplainer(model_main)
+
 for each in X_forecast.select_dtypes(include = 'object').columns:
     X_forecast[each] = X_forecast[each].astype('category')
 shap_values = explainer.shap_values(X_forecast)'''
