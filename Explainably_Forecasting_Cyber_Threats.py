@@ -3,8 +3,12 @@ from pathlib import Path
 from sklearn.metrics import mean_absolute_error
 from datetime import datetime, timedelta
 import numpy as np
-import xgboost as xgb
+from lightgbm import LGBMRegressor
+from lightgbm import early_stopping, log_evaluation
+from sklearn.model_selection import TimeSeriesSplit
 import shap
+import numpy as np
+import matplotlib.pyplot as plt
 
 # Defines the path to the data
 path = Path.cwd()
@@ -43,61 +47,53 @@ for each in calendar:
         n_of_attacks.append(len(calendar[each]))
 
 # Using back testing and xgboost
-def continuous_backtest(X, y, training_n = 8400, testing_n = 20, max_folds = 150):
-    values = []
-    for each in X.select_dtypes(include = 'object').columns:
-        X[each] = X[each].astype('category')
-    length_of_data = len(data)
-    fold_n = 0
-    train_final = training_n
-    while (train_final + testing_n) <= length_of_data and fold_n < max_folds:
-        test_initial = train_final
-        test_final = test_initial + testing_n
-        X_train = X.iloc[: train_final]
-        X_test = X.iloc[test_initial : test_final]
-        y_train = y.iloc[: train_final]
-        y_test = y.iloc[test_initial : test_final]
-        D_train = xgb.DMatrix(X_train, label = y_train, enable_categorical = True)
-        D_test = xgb.DMatrix(X_test, label = y_test, enable_categorical = True)
-        parameters = {'objective': 'reg:absoluteerror',
-                      'enable_categorical': True,
-                      'tree_method': 'hist',
-                      'max_depth': 5,
-                      'learning_rate': 0.05,
-                      'eval_metric': 'mae'}
-        model = xgb.train(parameters, D_train, num_boost_round = 200, early_stopping_rounds = 25)
-        predictions = model.predict(D_test)
-        mae = mean_absolute_error(y_test, predictions)
-        values.append({'mae': mae,
-                       'Predictions': predictions,
-                       'y_test': y_test.values})
-        train_final += testing_n
-        fold_n += 1
-    return values
 X = data.drop(columns = ["ID"])
+features = [column for column in X.columns]
+for each in features:
+    X[each] = X[each].astype('category')
 y = pd.DataFrame(n_of_attacks)
-values = continuous_backtest(X, y)
-
+tss = TimeSeriesSplit(n_splits=4)
+modelling, maes = [], []
+for initial in range(len(data) - int(len(data)*0.7) - int(len(data)*0.2) + 1):
+    i, j = list(range(initial, initial + int(len(data)*0.7))), list(range(initial + int(len(data)*0.7), initial + int(len(data)*0.7) + int(len(data)*0.2)))
+    X_train = X.iloc[i]
+    X_test = X.iloc[j]
+    y_train = y.iloc[i]
+    y_test = y.iloc[j]
+    y_train, y_test = y_train.squeeze(), y_test.squeeze()
+    model = LGBMRegressor(objective = 'regression', n_estimators = 1000)
+    model.fit(X_train, y_train, eval_set = [(X_test, y_test)], callbacks = [early_stopping(25), log_evaluation(10)])
+    y_prediction = model.predict(X_test)
+    modelling.append(y_prediction)
+    mae = mean_absolute_error(y_test, y_prediction)
+    maes.append(mae)
+print(modelling)
+print("**************************")
+print(maes)
 # SHAP implementation
-forecast_dates = pd.data_range(start = "28/02/2025" + timedelta(days = 1), period = 365*3)
-forecast = pd.DataFrame(index = forecast_dates)
+'''forecast_dates = pd.date_range(start = end + timedelta(days = 1), periods = 365*3)
+forecast = pd.DataFrame(index = forecast_dates, columns = X.columns)
 X_forecast = forecast[X.columns]
-for each in X_forecast.select_dtypes(include = 'object').columns:
-    X_forecast[each] = X_forecast[each].astype('category')
-
 for each in X.select_dtypes(include = 'object').columns:
     X[each] = X[each].astype('category')
-D_train_main = xgb.DMatrix(X, label = y, enable_categorical = True)
+D_train_main = xgb.DMatrix(X, label = y.loc[:12114], enable_categorical = True)
 parameters = {'objective': 'reg:absoluteerror',
               'enable_categorical': True,
                 'tree_method': 'hist',
                 'max_depth': 5,
                 'learning_rate': 0.05,
                 'eval_metric': 'mae'}
-model_main = xgb.train(parameters,D_train_main, num_boost_round = 200)
+model_main = xgb.train(parameters, D_train_main, num_boost_round = 200)
 explainer = shap.TreeExplainer(model_main)
-shap_values = explainer.shap_values()
-# Ranking System
+for each in X_forecast.select_dtypes(include = 'object').columns:
+    X_forecast[each] = X_forecast[each].astype('category')
+shap_values = explainer.shap_values(X_forecast)'''
+
+
 
 # Final Projection
-
+'''def plot(dates = forecast_dates, optimal = optimal_forecast):
+    plt.plot(forecast_dates, optimal_forecast)
+    plt.xlabel("Date")
+    plt.ylabel("Predicted Number of Attacks Overall")
+    plt.show()'''
