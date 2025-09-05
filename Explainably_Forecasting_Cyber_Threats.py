@@ -81,11 +81,9 @@ def model(a, b):
     main_X = pd.concat(Xs, axis = 0)
     shap.summary_plot(main_shap, features = main_X, plot_type = "dot", max_display = 10)
     plt.show()
-
-model(data, n_of_attacks)
-
-# Predicting next 3 Years Globally
-
+    return [modelling, predictions, maes, shap_values, Xs]
+main_model = model(data, n_of_attacks)
+# Predicting next 3 Years of SHAP Values Globally
 
 
 
