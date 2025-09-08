@@ -74,10 +74,10 @@ def model(a, b):
         Xs.append(X_test)
 
 
-    '''main_shap = np.vstack(shap_values)
-    main_X = pd.concat(Xs, axis = 0)
-    shap.summary_plot(main_shap, features = main_X, plot_type = "dot", max_display = 10)
-    plt.show()'''######################## Uncomment ''
+    #main_shap = np.vstack(shap_values)
+    #main_X = pd.concat(Xs, axis = 0)
+    #shap.summary_plot(main_shap, features = main_X, plot_type = "dot", max_display = 10)
+    #plt.show()
     return modelling
 main_model = model(data, n_of_attacks)
 
@@ -106,8 +106,8 @@ features_for_pre = [column for column in X_for_pre.columns]
 for each in features_for_pre:
     X_for_pre[each] = X_for_pre[each].astype('category')
 
-start_id, end_id = datetime.strptime("01/01/2025", "%d/%m/%Y"), datetime.strptime("28/02/2025", "%d/%m/%Y")
-X_for_pre_testing = [data[each] for each in data['Date'] if start_id <= datetime.strptime(each, "%d/%m/%Y") and end_id >= datetime.strptime(each, "%d/%m/%Y")]
+start_id, end_id = 20027, 20472
+X_for_pre_testing = data[(data['ID'] >= start_id) & (data['ID'] <= end_id)]
 X_for_pre_testing = X_for_pre_testing.drop(columns = ["ID"])
 for each in features_for_pre:
     X_for_pre_testing[each] = X_for_pre_testing[each].astype('category')
