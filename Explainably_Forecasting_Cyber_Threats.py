@@ -98,24 +98,16 @@ for each in features_for:
 # Cycle through each model, then assess Mean Absolute Errors on real data 
 # between 01-01-2025 and 28-02-2025 to choose best model to then make forecast with.
 
-n_days_pre = 58
-X_for_pre = data.drop(columns = ["ID"]).sample(n = n_days_pre, replace = True).reset_index(drop = True)
-days_pre = pd.date_range(start = datetime.strptime("01/01/2025", "%d/%m/%Y"), periods = n_days_pre, freq = "D")
-X_for_pre.index = days_pre
-features_for_pre = [column for column in X_for_pre.columns]
-for each in features_for_pre:
-    X_for_pre[each] = X_for_pre[each].astype('category')
-
 start_id, end_id = 20027, 20472
 X_for_pre_testing = data[(data['ID'] >= start_id) & (data['ID'] <= end_id)]
 X_for_pre_testing = X_for_pre_testing.drop(columns = ["ID"])
-for each in features_for_pre:
+for each in features_for:
     X_for_pre_testing[each] = X_for_pre_testing[each].astype('category')
 
 forecast_chosen = main_model[0]
 forecast_chosen_mae = mean_absolute_error(X_for_pre_testing , forecast_chosen)
 for i in range(1, len(main_model)):
-    forecast_i = main_model[i].predict(X_for_pre)
+    forecast_i = main_model[i].predict(X_for_pre_testing)
     if mean_absolute_error(X_for_pre_testing , forecast_i) < forecast_chosen_mae:
         forecast_chosen = main_model[i]
         forecast_chosen_mae = mean_absolute_error(X_for_pre_testing , forecast_i)
