@@ -46,6 +46,7 @@ for each in calendar:
     else:
         n_of_attacks.append(len(calendar[each]))
 
+
 # Using back testing and lightGBM with SHAP
 def model(a, b):
     X = a.drop(columns = ["ID"])
@@ -99,17 +100,17 @@ for each in features_for:
 # between 01-01-2025 and 28-02-2025 to choose best model to then make forecast with.
 
 start_id, end_id = 20027, 20472
-X_for_pre_testing = data[(data['ID'] >= start_id) & (data['ID'] <= end_id)]
-X_for_pre_testing = X_for_pre_testing.drop(columns = ["ID"])
-for each in features_for:
+X_for_pre_testing = data[(data['ID'] >= start_id) & (data['ID'] <= end_id)].drop(columns = ["ID"])
+features_pre_testing = [column for column in X_for_pre_testing.columns]
+for each in features_pre_testing:
     X_for_pre_testing[each] = X_for_pre_testing[each].astype('category')
 
-forecast_chosen = main_model[0]
-forecast_chosen_mae = mean_absolute_error(X_for_pre_testing , forecast_chosen)
+forecast_chosen = 0
+forecast_chosen_mae = mean_absolute_error(X_for_pre_testing , main_model[forecast_chosen].predict(X_for_pre_testing))
 for i in range(1, len(main_model)):
     forecast_i = main_model[i].predict(X_for_pre_testing)
     if mean_absolute_error(X_for_pre_testing , forecast_i) < forecast_chosen_mae:
-        forecast_chosen = main_model[i]
+        forecast_chosen = i
         forecast_chosen_mae = mean_absolute_error(X_for_pre_testing , forecast_i)
     
 
