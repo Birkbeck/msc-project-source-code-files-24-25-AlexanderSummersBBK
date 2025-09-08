@@ -77,11 +77,15 @@ def model(a, b):
     '''main_shap = np.vstack(shap_values)
     main_X = pd.concat(Xs, axis = 0)
     shap.summary_plot(main_shap, features = main_X, plot_type = "dot", max_display = 10)
-    plt.show()'''
+    plt.show()'''######################## Uncomment ''
     return modelling
 main_model = model(data, n_of_attacks)
 
+
 # Predicting next 3 Years of Cyber Attacks
+
+# Creating the relevant forecast storge
+
 n_days = 365*3
 X_for = data.drop(columns = ["ID"]).sample(n = n_days, replace = True).reset_index(drop = True)
 days = pd.date_range(start = datetime.strptime("01/03/2025", "%d/%m/%Y"), periods = n_days, freq = "D")
@@ -91,10 +95,33 @@ for each in features_for:
     X_for[each] = X_for[each].astype('category')
 
 
-# Cycle through each model, then access on real data between 01-01-2025 and 28-02-2025 to choose best model to then make forecast with.
-forecast = main_model[-1].predict(X_for)
+# Cycle through each model, then assess Mean Absolute Errors on real data 
+# between 01-01-2025 and 28-02-2025 to choose best model to then make forecast with.
 
-# Create the associated SHAP value graph.
+n_days_pre = 58
+X_for_pre = data.drop(columns = ["ID"]).sample(n = n_days_pre, replace = True).reset_index(drop = True)
+days_pre = pd.date_range(start = datetime.strptime("01/01/2025", "%d/%m/%Y"), periods = n_days_pre, freq = "D")
+X_for_pre.index = days_pre
+features_for_pre = [column for column in X_for_pre.columns]
+for each in features_for_pre:
+    X_for_pre[each] = X_for_pre[each].astype('category')
+
+start_id, end_id = datetime.strptime("01/01/2025", "%d/%m/%Y"), datetime.strptime("28/02/2025", "%d/%m/%Y")
+X_for_pre_testing = [data[each] for each in data['Date'] if start_id <= datetime.strptime(each, "%d/%m/%Y") and end_id >= datetime.strptime(each, "%d/%m/%Y")]
+X_for_pre_testing = X_for_pre_testing.drop(columns = ["ID"])
+for each in features_for_pre:
+    X_for_pre_testing[each] = X_for_pre_testing[each].astype('category')
+
+forecast_chosen = main_model[0]
+forecast_chosen_mae = mean_absolute_error(X_for_pre_testing , forecast_chosen)
+for i in range(1, len(main_model)):
+    forecast_i = main_model[i].predict(X_for_pre)
+    if mean_absolute_error(X_for_pre_testing , forecast_i) < forecast_chosen_mae:
+        forecast_chosen = main_model[i]
+        forecast_chosen_mae = mean_absolute_error(X_for_pre_testing , forecast_i)
+    
+
+forecast = main_model[forecast_chosen].predict(X_for)
 
 # Final Projection
 def plot(dates = days, optimal = forecast):
@@ -103,3 +130,5 @@ def plot(dates = days, optimal = forecast):
     plt.ylabel("Predicted Number of Attacks Overall")
     plt.show()
 plot()
+
+# Create the associated SHAP value graph.
