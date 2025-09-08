@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import r2_score
 from datetime import datetime, timedelta
 import numpy as np
 from lightgbm import LGBMRegressor
@@ -105,16 +106,36 @@ features_pre_testing = [column for column in X_for_pre_testing.columns]
 for each in features_pre_testing:
     X_for_pre_testing[each] = X_for_pre_testing[each].astype('category')
 
+real_attacks = []
+for each in calendar:
+    if datetime.strptime(each, "%d/%m/%Y") >= datetime.strptime("01/01/2025", "%d/%m/%Y") and  datetime.strptime(each, "%d/%m/%Y") <= datetime.strptime("28/02/2025", "%d/%m/%Y"):
+        if len(calendar[each]) > 0:
+            for i in range(len(calendar[each])):
+                real_attacks.append(len(calendar[each]))
+        else:
+            real_attacks.append(len(calendar[each]))
+
 forecast_chosen = 0
-forecast_chosen_mae = mean_absolute_error(X_for_pre_testing , main_model[forecast_chosen].predict(X_for_pre_testing))
+initial_model = main_model[forecast_chosen].predict(X_for_pre_testing)
+limit1 = min(len(initial_model), len(real_attacks))
+forecast_chosen_mae = mean_absolute_error(real_attacks[:limit1], main_model[forecast_chosen].predict(X_for_pre_testing)[:limit1])
+maes_for = []
+limit_for = 0
 for i in range(1, len(main_model)):
     forecast_i = main_model[i].predict(X_for_pre_testing)
-    if mean_absolute_error(X_for_pre_testing , forecast_i) < forecast_chosen_mae:
+    limit2 = min(len(forecast_i), len(real_attacks))
+    if mean_absolute_error(real_attacks[:limit2], forecast_i[:limit2]) < forecast_chosen_mae:
+        limit_for = limit2
         forecast_chosen = i
-        forecast_chosen_mae = mean_absolute_error(X_for_pre_testing , forecast_i)
-    
+        forecast_chosen_mae = mean_absolute_error(real_attacks[:limit2], forecast_i[:limit2])
+    maes_for.append(mean_absolute_error(real_attacks[:limit2], forecast_i[:limit2]))
 
 forecast = main_model[forecast_chosen].predict(X_for)
+
+#Analysis and Statistics Section
+r2_for = r2_score(real_attacks[:limit_for], main_model[forecast_chosen].predict(X_for_pre_testing)[:limit_for] )
+print(forecast_chosen_mae)
+
 
 # Final Projection
 def plot(dates = days, optimal = forecast):
@@ -124,4 +145,8 @@ def plot(dates = days, optimal = forecast):
     plt.show()
 plot()
 
-# Create the associated SHAP value graph.
+# Create the associated SHAP value graph.       
+explainer_for = shap.TreeExplainer(model)
+shap_values_for = explainer_for.shap_values(X_for)
+shap.summary_plot(shap_values_for, features = X_for, plot_type = "dot", max_display = 10)
+plt.show()
