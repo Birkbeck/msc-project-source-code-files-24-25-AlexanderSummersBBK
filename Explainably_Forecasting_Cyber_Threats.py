@@ -53,7 +53,7 @@ for each in calendar:
 
 # Using back testing and lightGBM with SHAP
 def model(a, b):
-    X = a.drop(columns = ["ID"])
+    X = a.drop(columns = ["ID", "Initial Access"])
     features = [column for column in X.columns]
     for each in features:
         X[each] = X[each].astype('category')
@@ -151,5 +151,5 @@ plot()
 # Create the associated SHAP value graph.       
 explainer_for = shap.TreeExplainer(forecast)
 shap_values_for = explainer_for.shap_values(X_for)
-shap.summary_plot(shap_values_for, features = X_for, plot_type = "dot", max_display = 10)
+shap.plots.beeswarm(shap_values_for)
 plt.show()
