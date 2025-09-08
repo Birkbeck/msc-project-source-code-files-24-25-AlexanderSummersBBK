@@ -11,6 +11,9 @@ import shap
 import numpy as np
 import matplotlib.pyplot as plt
 
+# The code below has comments that are used to outline the key aims
+# and outline the next objectives to be completed.
+
 # Defines the path to the data
 path = Path.cwd()
 data = pd.DataFrame(pd.read_csv(path / "main_table.csv"))
@@ -134,7 +137,7 @@ forecast = main_model[forecast_chosen].predict(X_for)
 
 #Analysis and Statistics Section
 r2_for = r2_score(real_attacks[:limit_for], main_model[forecast_chosen].predict(X_for_pre_testing)[:limit_for] )
-print(forecast_chosen_mae)
+print("The Mean Absolute Error of the Forecast is: {}, and the corresponding R Squared Score was: {}".format(forecast_chosen_mae, r2_for))
 
 
 # Final Projection
