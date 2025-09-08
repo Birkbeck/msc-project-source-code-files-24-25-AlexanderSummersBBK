@@ -103,7 +103,7 @@ for each in features_for:
 # Cycle through each model, then assess Mean Absolute Errors on real data 
 # between 01-01-2025 and 28-02-2025 to choose best model to then make forecast with.
 
-start_id, end_id = 20027, 20472
+start_id, end_id = 17211, 20472
 X_for_pre_testing = data[(data['ID'] >= start_id) & (data['ID'] <= end_id)].drop(columns = ["ID"])
 features_pre_testing = [column for column in X_for_pre_testing.columns]
 for each in features_pre_testing:
@@ -111,7 +111,7 @@ for each in features_pre_testing:
 
 real_attacks = []
 for each in calendar:
-    if datetime.strptime(each, "%d/%m/%Y") >= datetime.strptime("01/01/2025", "%d/%m/%Y") and  datetime.strptime(each, "%d/%m/%Y") <= datetime.strptime("28/02/2025", "%d/%m/%Y"):
+    if datetime.strptime(each, "%d/%m/%Y") >= datetime.strptime("01/01/2024", "%d/%m/%Y") and  datetime.strptime(each, "%d/%m/%Y") <= datetime.strptime("28/02/2025", "%d/%m/%Y"):
         if len(calendar[each]) > 0:
             for i in range(len(calendar[each])):
                 real_attacks.append(len(calendar[each]))
@@ -149,7 +149,7 @@ def plot(dates = days, optimal = forecast):
 plot()
 
 # Create the associated SHAP value graph.       
-explainer_for = shap.TreeExplainer(model)
+explainer_for = shap.TreeExplainer(forecast)
 shap_values_for = explainer_for.shap_values(X_for)
 shap.summary_plot(shap_values_for, features = X_for, plot_type = "dot", max_display = 10)
 plt.show()
