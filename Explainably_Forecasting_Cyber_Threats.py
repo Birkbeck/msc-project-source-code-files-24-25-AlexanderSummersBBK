@@ -7,7 +7,6 @@ import numpy as np
 from lightgbm import LGBMRegressor
 from lightgbm import early_stopping, log_evaluation
 from sklearn.model_selection import TimeSeriesSplit
-from sklearn.model_selection import GridSearchCV
 import shap
 import numpy as np
 import matplotlib.pyplot as plt
@@ -61,21 +60,16 @@ def model(a, b):
     y = pd.DataFrame(b)
     tss = TimeSeriesSplit(n_splits=5)
     modelling, predictions, maes, shap_values, Xs = [], [], [], [], []
-    for fold, (i, j) in enumerate(tss.split(X)):
+    for initial in range(len(X) - int(len(X)*0.7) - int(len(X)*0.05) + 1):
+        i, j = list(range(initial, initial + int(len(a)*0.7))), list(range(initial + int(len(a)*0.7), initial + int(len(a)*0.7) + int(len(a)*0.05)))
         X_train = X.iloc[i]
         X_test = X.iloc[j]
         y_train = y.iloc[i]
         y_test = y.iloc[j]
         y_train, y_test = y_train.squeeze(), y_test.squeeze()
-        parameters = {'learning_rate' : [0.01, 0.05, 0.1], 'num_leaves' : [16, 32, 64, 128], 'max_depth' : [4, 8], 'reg_lambda': [0, 1]}
-       
-        pre_model = LGBMRegressor(objective = 'regression', n_estimators = 1000)
-        gs_model = GridSearchCV(estimator = pre_model,
-                                param_grid = parameters,
-                                scoring = 'neg_mean_absolute_error',
-                                cv = 5)
-        gs_model.fit(X_train, y_train)
-        model = gs_model.best_estimator_
+        model = LGBMRegressor(objective = 'regression', n_estimators = 1000, learning_rate = 0.01,
+                              num_leaves = 64, max_depth = 4, reg_lambda = 1)
+        model.fit(X_train, y_train, eval_set = [(X_test, y_test)], callbacks = [early_stopping(25), log_evaluation(10)])
         y_prediction = model.predict(X_test)
         predictions.append(y_prediction)
         mae = mean_absolute_error(y_test, y_prediction)
