@@ -7,13 +7,14 @@ import numpy as np
 from lightgbm import LGBMRegressor
 from lightgbm import early_stopping, log_evaluation
 from sklearn.model_selection import TimeSeriesSplit
+from sklearn.model_selection import GridSearchCV
 import shap
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time
 # The code below has comments that are used to outline the key aims
 # and outline the next objectives to be completed.
-
+time1 = time.time()
 # Defines the path to the data
 path = Path.cwd()
 data = pd.DataFrame(pd.read_csv(path / "main_table.csv"))
@@ -53,22 +54,28 @@ for each in calendar:
 
 # Using back testing and lightGBM with SHAP
 def model(a, b):
-    X = a.drop(columns = ["ID", "Initial Access"])
+    X = a.drop(columns = ["ID", "Initial Access", "Country"])
     features = [column for column in X.columns]
     for each in features:
         X[each] = X[each].astype('category')
     y = pd.DataFrame(b)
-    tss = TimeSeriesSplit(n_splits=4)
+    tss = TimeSeriesSplit(n_splits=5)
     modelling, predictions, maes, shap_values, Xs = [], [], [], [], []
-    for initial in range(len(a) - int(len(a)*0.7) - int(len(a)*0.2) + 1):
-        i, j = list(range(initial, initial + int(len(a)*0.7))), list(range(initial + int(len(a)*0.7), initial + int(len(a)*0.7) + int(len(a)*0.2)))
+    for fold, (i, j) in enumerate(tss.split(X)):
         X_train = X.iloc[i]
         X_test = X.iloc[j]
         y_train = y.iloc[i]
         y_test = y.iloc[j]
         y_train, y_test = y_train.squeeze(), y_test.squeeze()
-        model = LGBMRegressor(objective = 'regression', n_estimators = 1000)
-        model.fit(X_train, y_train, eval_set = [(X_test, y_test)], callbacks = [early_stopping(25), log_evaluation(10)])
+        parameters = {'learning_rate' : [0.01, 0.05, 0.1], 'num_leaves' : [16, 32, 64, 128], 'max_depth' : [4, 8], 'reg_lambda': [0, 1]}
+       
+        pre_model = LGBMRegressor(objective = 'regression', n_estimators = 1000)
+        gs_model = GridSearchCV(estimator = pre_model,
+                                param_grid = parameters,
+                                scoring = 'neg_mean_absolute_error',
+                                cv = 5)
+        gs_model.fit(X_train, y_train)
+        model = gs_model.best_estimator_
         y_prediction = model.predict(X_test)
         predictions.append(y_prediction)
         mae = mean_absolute_error(y_test, y_prediction)
@@ -92,7 +99,7 @@ main_model = model(data, n_of_attacks)
 # Creating the relevant forecast storge
 
 n_days = 365*3
-X_for = data.drop(columns = ["ID"]).sample(n = n_days, replace = True).reset_index(drop = True)
+X_for = data.drop(columns = ["ID", "Initial Access", "Country"]).sample(n = n_days, replace = True).reset_index(drop = True)
 days = pd.date_range(start = datetime.strptime("01/03/2025", "%d/%m/%Y"), periods = n_days, freq = "D")
 X_for.index = days
 features_for = [column for column in X_for.columns]
@@ -103,15 +110,15 @@ for each in features_for:
 # Cycle through each model, then assess Mean Absolute Errors on real data 
 # between 01-01-2025 and 28-02-2025 to choose best model to then make forecast with.
 
-start_id, end_id = 17211, 20472
-X_for_pre_testing = data[(data['ID'] >= start_id) & (data['ID'] <= end_id)].drop(columns = ["ID"])
+start_id, end_id = 13089, 20472
+X_for_pre_testing = data[(data['ID'] >= start_id) & (data['ID'] <= end_id)].drop(columns = ["ID", "Initial Access", "Country"])
 features_pre_testing = [column for column in X_for_pre_testing.columns]
 for each in features_pre_testing:
     X_for_pre_testing[each] = X_for_pre_testing[each].astype('category')
 
 real_attacks = []
 for each in calendar:
-    if datetime.strptime(each, "%d/%m/%Y") >= datetime.strptime("01/01/2024", "%d/%m/%Y") and  datetime.strptime(each, "%d/%m/%Y") <= datetime.strptime("28/02/2025", "%d/%m/%Y"):
+    if datetime.strptime(each, "%d/%m/%Y") >= datetime.strptime("01/01/2023", "%d/%m/%Y") and  datetime.strptime(each, "%d/%m/%Y") <= datetime.strptime("28/02/2025", "%d/%m/%Y"):
         if len(calendar[each]) > 0:
             for i in range(len(calendar[each])):
                 real_attacks.append(len(calendar[each]))
@@ -137,7 +144,7 @@ forecast = main_model[forecast_chosen].predict(X_for)
 
 #Analysis and Statistics Section
 r2_for = r2_score(real_attacks[:limit_for], main_model[forecast_chosen].predict(X_for_pre_testing)[:limit_for] )
-print("The Mean Absolute Error of the Forecast is: {}, and the corresponding R Squared Score was: {}".format(forecast_chosen_mae, r2_for))
+print("The Mean Absolute Error of the Forecast is: {}, and the corresponding R Squared Score was: {} in {} seconds ".format(forecast_chosen_mae, r2_for, str(time.time()-time1)))
 
 
 # Final Projection
@@ -149,7 +156,7 @@ def plot(dates = days, optimal = forecast):
 plot()
 
 # Create the associated SHAP value graph.       
-explainer_for = shap.TreeExplainer(forecast)
-shap_values_for = explainer_for.shap_values(X_for)
+explainer_for = shap.TreeExplainer(main_model[forecast_chosen])
+shap_values_for = explainer_for(X_for)
 shap.plots.beeswarm(shap_values_for)
 plt.show()
