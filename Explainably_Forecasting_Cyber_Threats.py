@@ -6,12 +6,12 @@ from datetime import datetime, timedelta
 import numpy as np
 from lightgbm import LGBMRegressor
 from lightgbm import early_stopping, log_evaluation
-from sklearn.model_selection import TimeSeriesSplit
 import shap
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-# The code below has comments that are used to outline the key aims
+# The code below has comments that are used to outline the project objectives
+
 # and outline the next objectives to be completed.
 time1 = time.time()
 # Defines the path to the data
@@ -51,25 +51,23 @@ for each in calendar:
         n_of_attacks.append(len(calendar[each]))
 
 
-# Using back testing and lightGBM with SHAP
+# Using backtesting and lightGBM with SHAP
 def model(a, b):
     X = a.drop(columns = ["ID", "Initial Access", "Country"])
     features = [column for column in X.columns]
     for each in features:
         X[each] = X[each].astype('category')
     y = pd.DataFrame(b)
-    tss = TimeSeriesSplit(n_splits=5)
     modelling, predictions, maes, shap_values, Xs = [], [], [], [], []
-    for initial in range(len(X) - int(len(X)*0.7) - int(len(X)*0.05) + 1):
-        i, j = list(range(initial, initial + int(len(a)*0.7))), list(range(initial + int(len(a)*0.7), initial + int(len(a)*0.7) + int(len(a)*0.05)))
+    for initial in range(len(X) - int(len(X)*0.5) - int(len(X)*0.01) + 1):
+        i, j = list(range(initial, initial + int(len(a)*0.5))), list(range(initial + int(len(a)*0.5), initial + int(len(a)*0.5) + int(len(a)*0.01)))
         X_train = X.iloc[i]
         X_test = X.iloc[j]
         y_train = y.iloc[i]
         y_test = y.iloc[j]
         y_train, y_test = y_train.squeeze(), y_test.squeeze()
-        model = LGBMRegressor(objective = 'regression', n_estimators = 1000, learning_rate = 0.01,
-                              num_leaves = 64, max_depth = 4, reg_lambda = 1)
-        model.fit(X_train, y_train, eval_set = [(X_test, y_test)], callbacks = [early_stopping(25), log_evaluation(10)])
+        model = LGBMRegressor(objective = 'regression', n_estimators = 500, learning_rate = 0.1, reg_lambda = 0)
+        model.fit(X_train, y_train, eval_set = [(X_test, y_test)], callbacks = [early_stopping(25), log_evaluation(100)])
         y_prediction = model.predict(X_test)
         predictions.append(y_prediction)
         mae = mean_absolute_error(y_test, y_prediction)
@@ -102,17 +100,17 @@ for each in features_for:
 
 
 # Cycle through each model, then assess Mean Absolute Errors on real data 
-# between 01-01-2025 and 28-02-2025 to choose best model to then make forecast with.
+# between 01-01-2016 and 28-02-2025 to choose best model to then make forecast with.
 
 start_id, end_id = 13089, 20472
-X_for_pre_testing = data[(data['ID'] >= start_id) & (data['ID'] <= end_id)].drop(columns = ["ID", "Initial Access", "Country"])
+X_for_pre_testing = data.drop(columns = ["ID", "Initial Access", "Country"])
 features_pre_testing = [column for column in X_for_pre_testing.columns]
 for each in features_pre_testing:
     X_for_pre_testing[each] = X_for_pre_testing[each].astype('category')
 
 real_attacks = []
 for each in calendar:
-    if datetime.strptime(each, "%d/%m/%Y") >= datetime.strptime("01/01/2023", "%d/%m/%Y") and  datetime.strptime(each, "%d/%m/%Y") <= datetime.strptime("28/02/2025", "%d/%m/%Y"):
+    if datetime.strptime(each, "%d/%m/%Y") >= datetime.strptime("01/01/2016", "%d/%m/%Y") and  datetime.strptime(each, "%d/%m/%Y") <= datetime.strptime("28/02/2025", "%d/%m/%Y"):
         if len(calendar[each]) > 0:
             for i in range(len(calendar[each])):
                 real_attacks.append(len(calendar[each]))
